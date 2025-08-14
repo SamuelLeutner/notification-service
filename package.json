@@ -6,10 +6,15 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
+    "amqplib": "^0.10.8",
+    "dotenv": "^17.2.1",
     "elysia": "latest"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "@types/amqplib": "^0.10.7",
+    "@types/nodemailer": "^6.4.17",
+    "bun-types": "latest",
+    "nodemailer": "^7.0.5"
   },
   "module": "src/index.js"
 }

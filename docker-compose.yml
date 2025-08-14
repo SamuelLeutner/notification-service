@@ -1,0 +1,61 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    container_name: wallet_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_logs:/var/log/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - wallet_network
+
+  notification_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    container_name: wallet_notification_service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+    volumes:
+      - ./:/app
+    networks:
+      - wallet_network
+    restart: unless-stopped
+
+  maildev:
+    image: maildev/maildev
+    container_name: wallet_maildev
+    ports:
+      - "1080:1080" 
+      - "1025:1025" 
+    networks:
+      - wallet_network
+
+volumes:
+  rabbitmq_data:
+  rabbitmq_logs:
+
+networks:
+  wallet_network:
+    driver: bridge
